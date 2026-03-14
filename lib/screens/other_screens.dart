@@ -1,6 +1,9 @@
 // call_history_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:matrix/matrix.dart';
+import '../services/matrix_service.dart';
 import '../theme/app_theme.dart';
 
 class CallHistoryScreen extends StatefulWidget {
@@ -382,9 +385,3 @@ class _NewChatScreenState extends ConsumerState<NewChatScreen> {
     }
   }
 }
-
-// Imports needed at top of this file
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:matrix/matrix.dart';
-import '../services/matrix_service.dart';
-import '../theme/app_theme.dart';
