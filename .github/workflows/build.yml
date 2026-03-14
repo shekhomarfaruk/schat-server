@@ -1,0 +1,89 @@
+name: Build SChat APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Create asset directories
+        run: |
+          mkdir -p assets/images
+          mkdir -p assets/icons
+          mkdir -p assets/fonts
+          # Create placeholder google icon
+          echo "" > assets/icons/google.png
+
+      - name: Generate code
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+        continue-on-error: true
+
+      - name: Build APK (Debug)
+        run: flutter build apk --debug --no-tree-shake-icons
+
+      - name: Build APK (Release)
+        run: |
+          flutter build apk --release --no-tree-shake-icons \
+            --dart-define=FLUTTER_BUILD_MODE=release
+        continue-on-error: true
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SChat-Debug-APK
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 30
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SChat-Release-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+        continue-on-error: true
+
+  build-ios:
+    runs-on: macos-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - run: flutter pub get
+      - run: flutter build ios --no-codesign --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SChat-iOS-Debug
+          path: build/ios/iphoneos/Runner.app
