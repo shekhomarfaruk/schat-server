@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:matrix/matrix.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,19 +104,7 @@ class MatrixService {
 
   /// Login with Google (SSO)
   Future<String?> getGoogleSSOUrl() async {
-    try {
-      await client.checkHomeserver(Uri.parse(kMatrixHomeserver));
-      final ssoProviders = await client.getSsoProviders();
-      final google = ssoProviders?.identityProviders
-          ?.firstWhere((p) => p.brand == 'google',
-              orElse: () => ssoProviders.identityProviders!.first);
-      if (google != null) {
-        return '$kMatrixHomeserver/_matrix/client/v3/login/sso/redirect/${google.id}?redirectUrl=schat://callback';
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+    return '$kMatrixHomeserver/_matrix/client/v3/login/sso/redirect?redirectUrl=schat://callback';
   }
 
   /// Register new user
@@ -158,23 +147,26 @@ class MatrixService {
 
   /// Send image
   Future<void> sendImage(Room room, String filePath) async {
-    final matrixFile = await MatrixImageFile.fromLocalFile(filePath);
+    final bytes = await File(filePath).readAsBytes();
+    final matrixFile = MatrixImageFile(
+      bytes: bytes,
+      name: filePath.split('/').last,
+    );
     await room.sendFileEvent(matrixFile);
   }
 
   /// Send file (pdf, doc, etc)
   Future<void> sendFile(Room room, String filePath, String name) async {
-    final matrixFile = MatrixFile(
-      bytes: await MatrixFile.fromLocalFile(filePath).then((f) => f.bytes),
-      name: name,
-    );
+    final bytes = await File(filePath).readAsBytes();
+    final matrixFile = MatrixFile(bytes: bytes, name: name);
     await room.sendFileEvent(matrixFile);
   }
 
   /// Send voice message
   Future<void> sendVoice(Room room, String filePath) async {
+    final bytes = await File(filePath).readAsBytes();
     final matrixFile = MatrixAudioFile(
-      bytes: await MatrixFile.fromLocalFile(filePath).then((f) => f.bytes),
+      bytes: bytes,
       name: 'voice_${DateTime.now().millisecondsSinceEpoch}.ogg',
     );
     await room.sendFileEvent(matrixFile, extraContent: {

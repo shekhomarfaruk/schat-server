@@ -33,7 +33,7 @@ dependencies:
 
   # Media
   just_audio: ^0.9.38
-  record: ^5.1.0
+  record: ^6.0.0
   video_player: ^2.8.6
   file_picker: ^8.0.0
 

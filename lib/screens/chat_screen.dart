@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import '../services/matrix_service.dart';
 import '../theme/app_theme.dart';
 
@@ -394,7 +395,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       if (await _recorder.hasPermission()) {
         final dir = await getTemporaryDirectory();
         await _recorder.start(
-          RecordConfig(encoder: AudioEncoder.opus),
+          const RecordConfig(encoder: AudioEncoder.opus),
           path: '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.ogg',
         );
         setState(() => _isRecording = true);
@@ -403,7 +404,4 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 }
 
-Future<Directory> getTemporaryDirectory() async {
-  // path_provider
-  return Directory.systemTemp;
-}
+
